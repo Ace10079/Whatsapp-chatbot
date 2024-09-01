@@ -45,24 +45,25 @@ app.post('/whatsapp', (req, res) => {
           twiml.message('Invalid option. Please choose:\n1. New complaint\n2. Track complaint\n3. How to use me');
         }
         break;
-        
+
       case 2:
         // Handle complaint type options
         if (Body.toLowerCase() === 'individual') {
           session.step = 3;
+          session.responses.push({ complaintType: 'Individual' });
           twiml.message('Please select the department:\n1. PWD\n2. Electrical\n3. Health');
         } else if (Body.toLowerCase() === 'association' || Body.toLowerCase() === 'company') {
-          // Handle other options similarly or provide appropriate responses
-          twiml.message('Thank you for your response. Your complaint is recorded.');
-          // Save data to MongoDB if needed
-          session.responses.push({ type: Body });
+          session.responses.push({ complaintType: Body });
+          // Save data to MongoDB
           const userData = new UserResponse({
-            name: session.name,
             phoneNumber: phoneNumber,
+            complaintType: Body,
             responses: session.responses
           });
           userData.save();
+          session.step = 1; // Reset to main options
           delete userSessions[phoneNumber]; // Clear session
+          twiml.message('Thank you for your response. Your complaint is recorded.');
         } else {
           twiml.message('Invalid option. Please choose:\n1. Individual\n2. Association\n3. Company');
         }
@@ -71,14 +72,15 @@ app.post('/whatsapp', (req, res) => {
       case 3:
         // Handle department options
         if (['pwd', 'electrical', 'health'].includes(Body.toLowerCase())) {
-          // Save data to MongoDB
           session.responses.push({ department: Body });
+          // Save data to MongoDB
           const userData = new UserResponse({
-            name: session.name,
             phoneNumber: phoneNumber,
+            department: Body,
             responses: session.responses
           });
           userData.save();
+          session.step = 1; // Reset to main options
           delete userSessions[phoneNumber]; // Clear session
           twiml.message('Your response is recorded. Thank you!');
         } else {
