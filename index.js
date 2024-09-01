@@ -13,11 +13,15 @@ app.use(bodyParser.urlencoded({ extended: false }));
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true
+}).then(() => {
+  console.log('MongoDB connected successfully');
+}).catch(err => {
+  console.error('MongoDB connection error:', err);
 });
 
 const userSessions = {}; // To track conversation state
 
-app.post('/whatsapp', (req, res) => {
+app.post('/whatsapp', async (req, res) => {
   const twiml = new MessagingResponse();
   const { Body, From } = req.body; // Message body and sender's number
   const phoneNumber = From.replace('whatsapp:', ''); // Clean up sender's phone
@@ -60,7 +64,12 @@ app.post('/whatsapp', (req, res) => {
             complaintType: Body,
             responses: session.responses
           });
-          userData.save();
+          try {
+            await userData.save();
+            console.log('Data saved successfully:', userData);
+          } catch (error) {
+            console.error('Error saving data:', error);
+          }
           session.step = 1; // Reset to main options
           delete userSessions[phoneNumber]; // Clear session
           twiml.message('Thank you for your response. Your complaint is recorded.');
@@ -79,7 +88,12 @@ app.post('/whatsapp', (req, res) => {
             department: Body,
             responses: session.responses
           });
-          userData.save();
+          try {
+            await userData.save();
+            console.log('Data saved successfully:', userData);
+          } catch (error) {
+            console.error('Error saving data:', error);
+          }
           session.step = 1; // Reset to main options
           delete userSessions[phoneNumber]; // Clear session
           twiml.message('Your response is recorded. Thank you!');
