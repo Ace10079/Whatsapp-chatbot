@@ -25,38 +25,16 @@ app.post('/whatsapp', (req, res) => {
   if (!userSessions[phoneNumber]) {
     // Start a new session
     userSessions[phoneNumber] = { step: 1, responses: [] };
-    twiml.message('How can I help you?', {
-      'interactive': {
-        'type': 'button',
-        'body': {
-          'text': 'Please choose an option:'
-        },
-        'action': {
-          'buttons': [
-            {
-              'type': 'reply',
-              'reply': {
-                'id': 'new_complaint',
-                'title': 'New complaint'
-              }
-            },
-            {
-              'type': 'reply',
-              'reply': {
-                'id': 'track_complaint',
-                'title': 'Track complaint'
-              }
-            },
-            {
-              'type': 'reply',
-              'reply': {
-                'id': 'how_to_use',
-                'title': 'How to use me'
-              }
-            }
-          ]
-        }
-      }
+    twiml.message('How can I help you? Please choose an option:');
+    twiml.message().body('New Complaint').action({
+      type: 'postback',
+      payload: 'new_complaint',
+    }).body('Track Complaint').action({
+      type: 'postback',
+      payload: 'track_complaint',
+    }).body('How to use me?').action({
+      type: 'postback',
+      payload: 'how_to_use',
     });
   } else {
     const session = userSessions[phoneNumber];
@@ -66,38 +44,16 @@ app.post('/whatsapp', (req, res) => {
         // Handle main options
         if (Body === 'new_complaint') {
           session.step = 2;
-          twiml.message('Please choose one:', {
-            'interactive': {
-              'type': 'button',
-              'body': {
-                'text': 'Select complaint type:'
-              },
-              'action': {
-                'buttons': [
-                  {
-                    'type': 'reply',
-                    'reply': {
-                      'id': 'individual',
-                      'title': 'Individual'
-                    }
-                  },
-                  {
-                    'type': 'reply',
-                    'reply': {
-                      'id': 'association',
-                      'title': 'Association'
-                    }
-                  },
-                  {
-                    'type': 'reply',
-                    'reply': {
-                      'id': 'company',
-                      'title': 'Company'
-                    }
-                  }
-                ]
-              }
-            }
+          twiml.message('Please choose one:');
+          twiml.message().body('Individual').action({
+            type: 'postback',
+            payload: 'individual',
+          }).body('Association').action({
+            type: 'postback',
+            payload: 'association',
+          }).body('Company').action({
+            type: 'postback',
+            payload: 'company',
           });
         } else if (Body === 'track_complaint') {
           // Handle track complaint logic here
@@ -109,38 +65,16 @@ app.post('/whatsapp', (req, res) => {
             '2. To track a complaint, click "Track complaint".\n' +
             '3. To get help, click "How to use me".');
         } else {
-          twiml.message('Invalid option. Please choose:', {
-            'interactive': {
-              'type': 'button',
-              'body': {
-                'text': 'Please choose an option:'
-              },
-              'action': {
-                'buttons': [
-                  {
-                    'type': 'reply',
-                    'reply': {
-                      'id': 'new_complaint',
-                      'title': 'New complaint'
-                    }
-                  },
-                  {
-                    'type': 'reply',
-                    'reply': {
-                      'id': 'track_complaint',
-                      'title': 'Track complaint'
-                    }
-                  },
-                  {
-                    'type': 'reply',
-                    'reply': {
-                      'id': 'how_to_use',
-                      'title': 'How to use me'
-                    }
-                  }
-                ]
-              }
-            }
+          twiml.message('Invalid option. Please choose:');
+          twiml.message().body('New Complaint').action({
+            type: 'postback',
+            payload: 'new_complaint',
+          }).body('Track Complaint').action({
+            type: 'postback',
+            payload: 'track_complaint',
+          }).body('How to use me?').action({
+            type: 'postback',
+            payload: 'how_to_use',
           });
         }
         break;
@@ -150,54 +84,20 @@ app.post('/whatsapp', (req, res) => {
         if (Body === 'individual') {
           session.step = 3;
           session.complaintType = 'Individual'; // Store selected type
-          twiml.message('Please select the department:', {
-            'interactive': {
-              'type': 'button',
-              'body': {
-                'text': 'Select department:'
-              },
-              'action': {
-                'buttons': [
-                  {
-                    'type': 'reply',
-                    'reply': {
-                      'id': 'pwd',
-                      'title': 'PWD'
-                    }
-                  },
-                  {
-                    'type': 'reply',
-                    'reply': {
-                      'id': 'electrical',
-                      'title': 'Electrical'
-                    }
-                  },
-                  {
-                    'type': 'reply',
-                    'reply': {
-                      'id': 'health',
-                      'title': 'Health'
-                    }
-                  }
-                ]
-              }
-            }
+          twiml.message('Please select the department:');
+          twiml.message().body('PWD').action({
+            type: 'postback',
+            payload: 'pwd',
+          }).body('Electrical').action({
+            type: 'postback',
+            payload: 'electrical',
+          }).body('Health').action({
+            type: 'postback',
+            payload: 'health',
           });
-        } else if (Body === 'association') {
+        } else if (Body === 'association' || Body === 'company') {
           session.step = 4;
-          session.complaintType = 'Association'; // Store selected type
-          twiml.message('Thank you for your response. Your complaint is recorded.');
-          // Save data to MongoDB
-          const userData = new UserResponse({
-            phoneNumber: phoneNumber,
-            complaintType: session.complaintType,
-            responses: session.responses
-          });
-          userData.save();
-          delete userSessions[phoneNumber]; // Clear session
-        } else if (Body === 'company') {
-          session.step = 4;
-          session.complaintType = 'Company'; // Store selected type
+          session.complaintType = Body.charAt(0).toUpperCase() + Body.slice(1); // Store selected type
           twiml.message('Thank you for your response. Your complaint is recorded.');
           // Save data to MongoDB
           const userData = new UserResponse({
@@ -208,38 +108,16 @@ app.post('/whatsapp', (req, res) => {
           userData.save();
           delete userSessions[phoneNumber]; // Clear session
         } else {
-          twiml.message('Invalid option. Please choose:', {
-            'interactive': {
-              'type': 'button',
-              'body': {
-                'text': 'Please choose one:'
-              },
-              'action': {
-                'buttons': [
-                  {
-                    'type': 'reply',
-                    'reply': {
-                      'id': 'individual',
-                      'title': 'Individual'
-                    }
-                  },
-                  {
-                    'type': 'reply',
-                    'reply': {
-                      'id': 'association',
-                      'title': 'Association'
-                    }
-                  },
-                  {
-                    'type': 'reply',
-                    'reply': {
-                      'id': 'company',
-                      'title': 'Company'
-                    }
-                  }
-                ]
-              }
-            }
+          twiml.message('Invalid option. Please choose:');
+          twiml.message().body('Individual').action({
+            type: 'postback',
+            payload: 'individual',
+          }).body('Association').action({
+            type: 'postback',
+            payload: 'association',
+          }).body('Company').action({
+            type: 'postback',
+            payload: 'company',
           });
         }
         break;
@@ -260,38 +138,16 @@ app.post('/whatsapp', (req, res) => {
           delete userSessions[phoneNumber]; // Clear session
           twiml.message('Your response is recorded. Thank you!');
         } else {
-          twiml.message('Invalid department. Please select:', {
-            'interactive': {
-              'type': 'button',
-              'body': {
-                'text': 'Select department:'
-              },
-              'action': {
-                'buttons': [
-                  {
-                    'type': 'reply',
-                    'reply': {
-                      'id': 'pwd',
-                      'title': 'PWD'
-                    }
-                  },
-                  {
-                    'type': 'reply',
-                    'reply': {
-                      'id': 'electrical',
-                      'title': 'Electrical'
-                    }
-                  },
-                  {
-                    'type': 'reply',
-                    'reply': {
-                      'id': 'health',
-                      'title': 'Health'
-                    }
-                  }
-                ]
-              }
-            }
+          twiml.message('Invalid department. Please select:');
+          twiml.message().body('PWD').action({
+            type: 'postback',
+            payload: 'pwd',
+          }).body('Electrical').action({
+            type: 'postback',
+            payload: 'electrical',
+          }).body('Health').action({
+            type: 'postback',
+            payload: 'health',
           });
         }
         break;
