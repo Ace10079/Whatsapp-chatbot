@@ -17,7 +17,7 @@ mongoose.connect(process.env.MONGO_URI, {
 
 const userSessions = {}; // To track conversation state
 
-app.post("/whatsapp", (req, res) => {
+app.post("/whatsapp", async (req, res) => {
   console.log("Received WhatsApp message");
   const twiml = new MessagingResponse();
   const { Body, From } = req.body; // Message body and sender's number
@@ -65,11 +65,11 @@ app.post("/whatsapp", (req, res) => {
 
       case 2:
         console.log("Handling complaint type options");
-        const complaintType = normalizeComplaintType(Body);
-        if (complaintType) {
-          console.log("Complaint type selected");
+        if (["individual", "association", "company"].includes(Body.toLowerCase())) {
+          console.log(`${Body} selected`);
           session.step = 3;
-          session.responses.push(`Complaint Type: ${complaintType}`);
+          session.responses.push({ question: "Complaint Type", answer: Body });
+          session.complaintType = Body; // Save complaint type
           twiml.message(
             "Please select the department:\n1. PWD\n2. Electrical\n3. Health"
           );
@@ -83,22 +83,26 @@ app.post("/whatsapp", (req, res) => {
 
       case 3:
         console.log("Handling department options");
-        const department = normalizeDepartment(Body);
-        if (department) {
-          console.log("Department selected");
-          session.responses.push(`Department: ${department}`);
+        if (["pwd", "electrical", "health"].includes(Body.toLowerCase())) {
+          console.log(`${Body} selected`);
+          session.responses.push({ question: "Department", answer: Body });
+          session.department = Body; // Save department
+
+          // Save data to MongoDB
           const userData = new UserResponse({
             phoneNumber: phoneNumber,
-            responses: session.responses
+            complaintType: session.complaintType,
+            department: session.department,
+            responses: session.responses,
           });
           console.log("Saving data to MongoDB");
-          userData.save((err) => {
-            if (err) {
-              console.log(`Error saving data: ${err}`);
-            } else {
-              console.log("Data saved successfully");
-            }
-          });
+          try {
+            await userData.save();
+            console.log("Data saved successfully");
+          } catch (err) {
+            console.error(`Error saving data: ${err}`);
+          }
+
           delete userSessions[phoneNumber]; // Clear session
           twiml.message("Your response is recorded. Thank you!");
         } else {
@@ -125,30 +129,3 @@ app.post("/whatsapp", (req, res) => {
 app.listen(3000, () => {
   console.log("Server is running on port 3000");
 });
-
-// Helper functions
-const normalizeComplaintType = (type) => {
-  switch (type.toLowerCase()) {
-    case 'individual':
-      return 'Individual';
-    case 'association':
-      return 'Association';
-    case 'company':
-      return 'Company';
-    default:
-      return null;
-  }
-};
-
-const normalizeDepartment = (dept) => {
-  switch (dept.toLowerCase()) {
-    case 'pwd':
-      return 'PWD';
-    case 'electrical':
-      return 'Electrical';
-    case 'health':
-      return 'Health';
-    default:
-      return null;
-  }
-};
