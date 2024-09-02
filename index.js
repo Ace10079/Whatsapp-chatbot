@@ -28,9 +28,14 @@ app.post("/whatsapp", async (req, res) => {
   if (!userSessions[phoneNumber]) {
     console.log("Starting new session");
     userSessions[phoneNumber] = { step: 1, responses: [] };
-    twiml.message(
-      "How can I help you?\n1. New complaint\n2. Track complaint\n3. How to use me"
-    );
+    twiml.message({
+      body: "How can I help you?",
+      buttons: [
+        { value: "new complaint" },
+        { value: "track complaint" },
+        { value: "how to use me" },
+      ],
+    });
   } else {
     console.log("Existing session found");
     const session = userSessions[phoneNumber];
@@ -42,9 +47,14 @@ app.post("/whatsapp", async (req, res) => {
         if (Body.toLowerCase() === "new complaint") {
           console.log("New complaint selected");
           session.step = 2;
-          twiml.message(
-            "Please choose one:\n1. Individual\n2. Association\n3. Company"
-          );
+          twiml.message({
+            body: "Please choose one:",
+            buttons: [
+              { value: "individual" },
+              { value: "association" },
+              { value: "company" },
+            ],
+          });
         } else if (Body.toLowerCase() === "track complaint") {
           console.log("Track complaint selected");
           // Handle track complaint logic here
@@ -57,9 +67,14 @@ app.post("/whatsapp", async (req, res) => {
           );
         } else {
           console.log("Invalid option");
-          twiml.message(
-            "Invalid option. Please choose:\n1. New complaint\n2. Track complaint\n3. How to use me"
-          );
+          twiml.message({
+            body: "Invalid option. Please choose:",
+            buttons: [
+              { value: "new complaint" },
+              { value: "track complaint" },
+              { value: "how to use me" },
+            ],
+          });
         }
         break;
 
@@ -70,14 +85,24 @@ app.post("/whatsapp", async (req, res) => {
           session.step = 3;
           session.responses.push({ question: "Complaint Type", answer: Body });
           session.complaintType = Body; // Save complaint type
-          twiml.message(
-            "Please select the department:\n1. PWD\n2. Electrical\n3. Health"
-          );
+          twiml.message({
+            body: "Please select the department:",
+            buttons: [
+              { value: "pwd" },
+              { value: "electrical" },
+              { value: "health" },
+            ],
+          });
         } else {
           console.log("Invalid option");
-          twiml.message(
-            "Invalid option. Please choose:\n1. Individual\n2. Association\n3. Company"
-          );
+          twiml.message({
+            body: "Invalid option. Please choose:",
+            buttons: [
+              { value: "individual" },
+              { value: "association" },
+              { value: "company" },
+            ],
+          });
         }
         break;
 
@@ -107,9 +132,14 @@ app.post("/whatsapp", async (req, res) => {
           twiml.message("Your response is recorded. Thank you!");
         } else {
           console.log("Invalid department");
-          twiml.message(
-            "Invalid department. Please select:\n1. PWD\n2. Electrical\n3. Health"
-          );
+          twiml.message({
+            body: "Invalid department. Please select:",
+            buttons: [
+              { value: "pwd" },
+              { value: "electrical" },
+              { value: "health" },
+            ],
+          });
         }
         break;
 
@@ -127,5 +157,6 @@ app.post("/whatsapp", async (req, res) => {
 });
 
 app.listen(3000, () => {
-  console.log("Server is running on port 3000");
+  console.log("Server is running on port 3000");   
+
 });
