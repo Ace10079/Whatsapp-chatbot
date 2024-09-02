@@ -3,26 +3,24 @@ const mongoose = require('mongoose');
 const userResponseSchema = new mongoose.Schema({
   phoneNumber: {
     type: String,
-    required: true,
+    required: true
   },
   complaintType: {
     type: String,
-    enum: ['Individual', 'Association', 'Company'],
-    required: false, // Optional until selected
+    required: false
   },
   department: {
     type: String,
-    enum: ['PWD', 'Electrical', 'Health'],
-    required: false, // Optional until selected
+    required: false
   },
   responses: {
-    type: [{ question: String, answer: String }], // Array to store question-answer pairs
-    required: false,
+    type: [String], // Array to store any additional responses
+    required: false
   },
   createdAt: {
     type: Date,
-    default: Date.now,
-  },
+    default: Date.now
+  }
 });
 
 const UserResponse = mongoose.model('UserResponse', userResponseSchema);
